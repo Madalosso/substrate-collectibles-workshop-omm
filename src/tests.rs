@@ -95,3 +95,14 @@ fn system_and_balances_work() {
 		assert_ok!(PalletBalances::mint_into(&BOB, 100));
 	});
 }
+
+#[test]
+fn create_kitty_checks_signed() {
+	new_test_ext().execute_with(|| {
+		// Function returns OK if create_kitty is called/signed by a valid AccountID
+		assert_ok!(PalletKitties::create_kitty(RuntimeOrigin::signed(ALICE)));
+
+		// functions fails if called from unsigned msg
+		assert_noop!(PalletKitties::create_kitty(RuntimeOrigin::none()), DispatchError::BadOrigin);
+	})
+}
