@@ -106,3 +106,17 @@ fn create_kitty_checks_signed() {
 		assert_noop!(PalletKitties::create_kitty(RuntimeOrigin::none()), DispatchError::BadOrigin);
 	})
 }
+
+#[test]
+fn create_kitty_emits_event() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(1);
+		// Execute call
+		assert_ok!(PalletKitties::create_kitty(RuntimeOrigin::signed(ALICE)));
+
+		// Assert last event is the Created one
+		System::assert_last_event(Event::<TestRuntime>::Created { owner: 1 }.into());
+
+		//Q: owner:1 -> 1 = ALICE?
+	})
+}

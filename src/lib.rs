@@ -18,11 +18,25 @@ pub mod pallet {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 	}
 
+	// Using macro-magic
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		Created { owner: T::AccountId },
 	}
+
+	// Without macro-magic (Revisit this later)
+	// #[pallet::event]
+	// pub(super) fn deposit_event(event: Event<T>) {
+	// 	let event = <<T as Config>::RuntimeEvent as From<Event<T>>>::from(event);
+	// 	let event = <<T as Config>::RuntimeEvent as Into<
+	// 		<T as frame_system::Config>::RuntimeEvent,
+	// 	>>::into(event);
+	// 	<frame_system::Pallet<T>>::deposit_event(event)
+	// }
+	// pub enum Event<T: Config> {
+	// 	Created { owner: T::AccountId },
+	// }
 
 	#[pallet::error]
 	pub enum Error<T> {}
