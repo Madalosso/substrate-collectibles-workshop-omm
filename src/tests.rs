@@ -171,7 +171,7 @@ fn kitties_map_created_correctly() {
 	new_test_ext().execute_with(|| {
 		let zero_key = [0u8; 32];
 		assert!(!Kitties::<TestRuntime>::contains_key(zero_key));
-		Kitties::<TestRuntime>::insert(zero_key, ());
+		Kitties::<TestRuntime>::insert(zero_key, DEFAULT_KITTY);
 		assert!(Kitties::<TestRuntime>::contains_key(zero_key));
 	})
 }
@@ -188,13 +188,44 @@ fn create_kitty_adds_to_map() {
 #[test]
 fn raise_error_on_duplicated() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(PalletKitties::create_kitty(RuntimeOrigin::signed(ALICE)));
+		assert_ok!(PalletKitties::mint(ALICE, [0u8; 32]));
 		assert_eq!(Kitties::<TestRuntime>::iter().count(), 1);
 
-		assert_noop!(
-			PalletKitties::create_kitty(RuntimeOrigin::signed(BOB)),
-			Error::<TestRuntime>::DuplicatedKitty
-		);
+		assert_noop!(PalletKitties::mint(BOB, [0u8; 32]), Error::<TestRuntime>::DuplicatedKitty);
 		assert_eq!(Kitties::<TestRuntime>::iter().count(), 1);
+	})
+}
+
+//copy
+
+#[test]
+fn kitty_struct_has_expected_traits() {
+	new_test_ext().execute_with(|| {
+		let kitty = DEFAULT_KITTY;
+		let bytes = kitty.encode();
+		let _decoded_kitty = Kitty::<TestRuntime>::decode(&mut &bytes[..]).unwrap();
+		assert!(Kitty::<TestRuntime>::max_encoded_len() > 0);
+		let _info = Kitty::<TestRuntime>::type_info();
+	})
+}
+
+#[test]
+fn mint_stores_owner_in_kitty() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(PalletKitties::mint(1337, [42u8; 32]));
+		let kitty = Kitties::<TestRuntime>::get([42u8; 32]).unwrap();
+		assert_eq!(kitty.owner, 1337);
+		assert_eq!(kitty.dna, [42u8; 32]);
+	})
+}
+
+#[test]
+fn create_kitty_unique() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(PalletKitties::create_kitty(RuntimeOrigin::signed(ALICE)));
+		assert_ok!(PalletKitties::create_kitty(RuntimeOrigin::signed(BOB)));
+
+		assert_eq!(CountForKitties::<TestRuntime>::get(), 2);
+		assert_eq!(Kitties::<TestRuntime>::iter().count(), 2);
 	})
 }
