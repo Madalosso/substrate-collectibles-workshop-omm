@@ -135,3 +135,18 @@ fn count_for_kitties_created_correctly() {
 		assert_eq!(CountForKitties::<TestRuntime>::get(), Some(1336u32));
 	});
 }
+
+#[test]
+fn mint_increment_counter() {
+	new_test_ext().execute_with(|| {
+		assert_eq!(CountForKitties::<TestRuntime>::get(), None);
+
+		// Check if necessary
+		System::set_block_number(1);
+
+		// Execute call
+		assert_ok!(PalletKitties::create_kitty(RuntimeOrigin::signed(ALICE)));
+
+		assert_eq!(CountForKitties::<TestRuntime>::get(), Some(1));
+	})
+}
