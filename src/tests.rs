@@ -197,7 +197,6 @@ fn raise_error_on_duplicated() {
 }
 
 //copy
-
 #[test]
 fn kitty_struct_has_expected_traits() {
 	new_test_ext().execute_with(|| {
@@ -227,5 +226,18 @@ fn create_kitty_unique() {
 
 		assert_eq!(CountForKitties::<TestRuntime>::get(), 2);
 		assert_eq!(Kitties::<TestRuntime>::iter().count(), 2);
+	})
+}
+
+#[test]
+fn kitties_owned_creation() {
+	new_test_ext().execute_with(|| {
+		// Initially users have no kitties owned.
+		assert_eq!(KittiesOwned::<TestRuntime>::get(ALICE).len(), 0);
+		// Let's create two kitties.
+		assert_ok!(PalletKitties::create_kitty(RuntimeOrigin::signed(ALICE)));
+		assert_ok!(PalletKitties::create_kitty(RuntimeOrigin::signed(ALICE)));
+		// Now they should have two kitties owned.
+		assert_eq!(KittiesOwned::<TestRuntime>::get(ALICE).len(), 2);
 	})
 }

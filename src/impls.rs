@@ -32,8 +32,8 @@ impl<T: Config> Pallet<T> {
 		// Error didn't have to include .into() due to the "?" sign.
 		let updated_count = current_count.checked_add(1).ok_or(Error::<T>::TooManyKitties)?;
 		CountForKitties::<T>::set(updated_count);
-
 		Kitties::<T>::insert(dna, kitty);
+		KittiesOwned::<T>::append(&owner, dna);
 
 		// Maybe include new mint id here? (counter)
 		Self::deposit_event(Event::<T>::Created { owner });
