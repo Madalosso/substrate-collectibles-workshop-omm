@@ -124,22 +124,22 @@ fn create_kitty_emits_event() {
 #[test]
 fn count_for_kitties_created_correctly() {
 	new_test_ext().execute_with(|| {
-		assert_eq!(CountForKitties::<TestRuntime>::get(), None);
+		assert_eq!(CountForKitties::<TestRuntime>::get(), u32::default());
 
 		// A bit awkward... what is the difference between these 2?
-		CountForKitties::<TestRuntime>::set(Some(1337u32));
-		assert_eq!(CountForKitties::<TestRuntime>::get(), Some(1337u32));
+		CountForKitties::<TestRuntime>::set(1337u32);
+		assert_eq!(CountForKitties::<TestRuntime>::get(), 1337u32);
 		CountForKitties::<TestRuntime>::put(1336u32);
 
-		assert_ne!(CountForKitties::<TestRuntime>::get(), Some(1337u32));
-		assert_eq!(CountForKitties::<TestRuntime>::get(), Some(1336u32));
+		assert_ne!(CountForKitties::<TestRuntime>::get(), 1337u32);
+		assert_eq!(CountForKitties::<TestRuntime>::get(), 1336u32);
 	});
 }
 
 #[test]
 fn mint_increment_counter() {
 	new_test_ext().execute_with(|| {
-		assert_eq!(CountForKitties::<TestRuntime>::get(), None);
+		assert_eq!(CountForKitties::<TestRuntime>::get(), u32::default());
 
 		// Check if necessary
 		System::set_block_number(1);
@@ -147,7 +147,7 @@ fn mint_increment_counter() {
 		// Execute call
 		assert_ok!(PalletKitties::create_kitty(RuntimeOrigin::signed(ALICE)));
 
-		assert_eq!(CountForKitties::<TestRuntime>::get(), Some(1));
+		assert_eq!(CountForKitties::<TestRuntime>::get(), 1);
 	})
 }
 

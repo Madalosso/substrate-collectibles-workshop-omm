@@ -19,7 +19,7 @@ pub mod pallet {
 	}
 
 	#[pallet::storage]
-	pub(super) type CountForKitties<T: Config> = StorageValue<Value = u32>;
+	pub(super) type CountForKitties<T: Config> = StorageValue<Value = u32, QueryKind = ValueQuery>;
 
 	// Using macro-magic
 	#[pallet::event]
