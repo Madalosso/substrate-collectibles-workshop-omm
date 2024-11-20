@@ -150,3 +150,15 @@ fn mint_increment_counter() {
 		assert_eq!(CountForKitties::<TestRuntime>::get(), Some(1));
 	})
 }
+
+#[test]
+fn mint_error_on_overflow() {
+	new_test_ext().execute_with(|| {
+		CountForKitties::<TestRuntime>::put(u32::MAX);
+
+		assert_noop!(
+			PalletKitties::create_kitty(RuntimeOrigin::signed(ALICE)),
+			Error::<TestRuntime>::TooManyKitties
+		);
+	});
+}
