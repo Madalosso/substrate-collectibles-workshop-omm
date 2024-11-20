@@ -28,6 +28,8 @@ type Block = frame_system::mocking::MockBlock<TestRuntime>;
 const ALICE: u64 = 1;
 const BOB: u64 = 2;
 
+const DEFAULT_KITTY: Kitty<TestRuntime> = Kitty { dna: [0u8; 32], owner: 0 };
+
 // Our blockchain tests only need 3 Pallets:
 // 1. System: Which is included with every FRAME runtime.
 // 2. PalletBalances: Which is manages your blockchain's native currency. (i.e. DOT on Polkadot)
@@ -171,5 +173,28 @@ fn kitties_map_created_correctly() {
 		assert!(!Kitties::<TestRuntime>::contains_key(zero_key));
 		Kitties::<TestRuntime>::insert(zero_key, ());
 		assert!(Kitties::<TestRuntime>::contains_key(zero_key));
+	})
+}
+
+//copied
+#[test]
+fn create_kitty_adds_to_map() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(PalletKitties::create_kitty(RuntimeOrigin::signed(ALICE)));
+		assert_eq!(Kitties::<TestRuntime>::iter().count(), 1);
+	})
+}
+
+#[test]
+fn raise_error_on_duplicated() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(PalletKitties::create_kitty(RuntimeOrigin::signed(ALICE)));
+		assert_eq!(Kitties::<TestRuntime>::iter().count(), 1);
+
+		assert_noop!(
+			PalletKitties::create_kitty(RuntimeOrigin::signed(BOB)),
+			Error::<TestRuntime>::DuplicatedKitty
+		);
+		assert_eq!(Kitties::<TestRuntime>::iter().count(), 1);
 	})
 }
