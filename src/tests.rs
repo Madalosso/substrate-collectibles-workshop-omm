@@ -120,3 +120,18 @@ fn create_kitty_emits_event() {
 		//Q: owner:1 -> 1 = ALICE?
 	})
 }
+
+#[test]
+fn count_for_kitties_created_correctly() {
+	new_test_ext().execute_with(|| {
+		assert_eq!(CountForKitties::<TestRuntime>::get(), None);
+
+		// A bit awkward... what is the difference between these 2?
+		CountForKitties::<TestRuntime>::set(Some(1337u32));
+		assert_eq!(CountForKitties::<TestRuntime>::get(), Some(1337u32));
+		CountForKitties::<TestRuntime>::put(1336u32);
+
+		assert_ne!(CountForKitties::<TestRuntime>::get(), Some(1337u32));
+		assert_eq!(CountForKitties::<TestRuntime>::get(), Some(1336u32));
+	});
+}
