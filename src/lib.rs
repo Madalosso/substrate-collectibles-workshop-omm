@@ -32,14 +32,18 @@ pub mod pallet {
 	pub(super) type Kitties<T: Config> = StorageMap<Key = [u8; 32], Value = Kitty<T>>;
 
 	#[pallet::storage]
-	pub(super) type KittiesOwned<T: Config> =
-		StorageMap<Key = T::AccountId, Value = Vec<[u8; 32]>, QueryKind = ValueQuery>;
+	pub(super) type KittiesOwned<T: Config> = StorageMap<
+		Key = T::AccountId,
+		Value = BoundedVec<[u8; 32], ConstU32<100>>,
+		QueryKind = ValueQuery,
+	>;
 
 	// Using macro-magic
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		Created { owner: T::AccountId },
+		Transferred { from: T::AccountId, to: T::AccountId, kitty_id: [u8; 32] },
 	}
 
 	// Without macro-magic (Revisit this later)
@@ -58,8 +62,11 @@ pub mod pallet {
 	#[pallet::error]
 	pub enum Error<T> {
 		TooManyKitties,
-		NoKitty,
 		DuplicatedKitty,
+		NoKitty,
+		TooManyOwned,
+		NotOwner,
+		TransferToSelf,
 	}
 
 	#[pallet::call]
@@ -68,6 +75,16 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			let dna = Self::gen_dna();
 			Self::mint(who, dna)?;
+			Ok(())
+		}
+
+		pub fn transfer(
+			origin: OriginFor<T>,
+			to: T::AccountId,
+			kitty_id: [u8; 32],
+		) -> DispatchResult {
+			let from = ensure_signed(origin)?;
+			Self::do_transfer(from, to, kitty_id)?;
 			Ok(())
 		}
 	}
