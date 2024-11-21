@@ -79,6 +79,8 @@ pub mod pallet {
 		TooManyOwned,
 		NotOwner,
 		TransferToSelf,
+		NotForSale,
+		MaxPriceTooLow,
 	}
 
 	#[pallet::call]
@@ -117,7 +119,7 @@ pub mod pallet {
 			max_price: BalanceOf<T>,
 		) -> DispatchResult {
 			let from = ensure_signed(origin)?;
-			Self::do_buy_kitty(from, kitty_id, max_price);
+			Self::do_buy_kitty(from, kitty_id, max_price)?;
 			Ok(())
 		}
 	}

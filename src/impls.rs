@@ -1,6 +1,7 @@
 use super::*;
 use frame::prelude::*;
 use frame::primitives::BlakeTwo256;
+use frame::traits::tokens::Preservation;
 use frame::traits::Hash;
 
 impl<T: Config> Pallet<T> {
@@ -134,9 +135,27 @@ impl<T: Config> Pallet<T> {
 		kitty_id: [u8; 32],
 		max_price: BalanceOf<T>,
 	) -> DispatchResult {
-		// do_transfer
+		let buyer_address = buyer.clone();
+		// Question: Really necessary to check the existence of kitty_id if calling do_transfer (which already do that?)
+		let kitty = Kitties::<T>::get(kitty_id).ok_or(Error::<T>::NoKitty)?;
 
-		Self::deposit_event(Event::<T>::Sold { buyer, kitty_id, price: max_price });
+		// Assert is for sale and buyer max price covers the sale price
+		let price = match kitty.price {
+			Some(price) => {
+				if price > max_price {
+					return Err(Error::<T>::MaxPriceTooLow.into());
+				}
+				price
+			},
+			None => return Err(Error::<T>::NotForSale.into()),
+		};
+
+		T::NativeBalance::transfer(&buyer, &kitty.owner, price, Preservation::Preserve)?;
+
+		// maybe refactor to accept &mut buyer? ownership move cause `buyer_address`
+		Self::do_transfer(kitty.owner, buyer, kitty_id)?;
+
+		Self::deposit_event(Event::<T>::Sold { buyer: buyer_address, kitty_id, price });
 		return Ok(());
 	}
 }
