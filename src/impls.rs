@@ -129,4 +129,14 @@ impl<T: Config> Pallet<T> {
 		Self::deposit_event(Event::<T>::PriceSet { owner: from, kitty_id, new_price: price });
 		return Ok(());
 	}
+	pub fn do_buy_kitty(
+		buyer: T::AccountId,
+		kitty_id: [u8; 32],
+		max_price: BalanceOf<T>,
+	) -> DispatchResult {
+		// do_transfer
+
+		Self::deposit_event(Event::<T>::Sold { buyer, kitty_id, price: max_price });
+		return Ok(());
+	}
 }
