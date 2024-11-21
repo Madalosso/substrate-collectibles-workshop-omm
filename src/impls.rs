@@ -119,6 +119,13 @@ impl<T: Config> Pallet<T> {
 		kitty_id: [u8; 32],
 		price: Option<BalanceOf<T>>,
 	) -> DispatchResult {
+		let mut kitty = Kitties::<T>::get(kitty_id).ok_or(Error::<T>::NoKitty)?;
+		ensure!(kitty.owner == from, Error::<T>::NotOwner);
+
+		kitty.price = price;
+
+		Kitties::<T>::insert(kitty_id, kitty);
+
 		Self::deposit_event(Event::<T>::PriceSet { owner: from, kitty_id, new_price: price });
 		return Ok(());
 	}
