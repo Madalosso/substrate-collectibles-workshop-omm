@@ -4,6 +4,7 @@ mod impls;
 mod tests;
 
 use frame::prelude::*;
+use frame::traits::fungible::{Inspect, Mutate};
 pub use pallet::*;
 
 #[frame::pallet(dev_mode)]
@@ -16,13 +17,22 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+
+		/// Access the balances pallet through the associated type `NativeBalance`.
+		/// The `NativeBalance` type must implement `Inspect` and `Mutate`.
+		/// Both of these traits are generic over the `AccountId` type.
+		type NativeBalance: Inspect<Self::AccountId> + Mutate<Self::AccountId>;
 	}
+
+	pub type BalanceOf<T> =
+		<<T as Config>::NativeBalance as Inspect<<T as frame_system::Config>::AccountId>>::Balance;
 
 	#[derive(Encode, Decode, TypeInfo, MaxEncodedLen)]
 	#[scale_info(skip_type_params(T))]
 	pub struct Kitty<T: Config> {
 		pub dna: [u8; 32],
 		pub owner: T::AccountId,
+		pub price: Option<BalanceOf<T>>,
 	}
 
 	#[pallet::storage]

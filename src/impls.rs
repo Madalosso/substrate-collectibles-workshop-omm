@@ -80,6 +80,7 @@ impl<T: Config> Pallet<T> {
 		// Conclusion: Way cleaner. Adopt. Review Iter().position()
 
 		kitty.owner = to.clone();
+		kitty.price = None;
 		Kitties::<T>::insert(dna, kitty);
 		KittiesOwned::<T>::insert(&to, to_owned);
 		KittiesOwned::<T>::insert(&from, from_owned);
@@ -89,7 +90,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn mint(owner: T::AccountId, dna: [u8; 32]) -> DispatchResult {
-		let kitty = Kitty { dna, owner: owner.clone() };
+		let kitty = Kitty { dna, owner: owner.clone(), price: None };
 
 		// Ensure dna not present already
 		// match Kitties::<T>::contains_key(dna) {

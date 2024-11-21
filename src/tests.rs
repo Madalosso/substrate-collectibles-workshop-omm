@@ -28,7 +28,7 @@ type Block = frame_system::mocking::MockBlock<TestRuntime>;
 const ALICE: u64 = 1;
 const BOB: u64 = 2;
 
-const DEFAULT_KITTY: Kitty<TestRuntime> = Kitty { dna: [0u8; 32], owner: 0 };
+const DEFAULT_KITTY: Kitty<TestRuntime> = Kitty { dna: [0u8; 32], owner: 0, price: None };
 
 // Our blockchain tests only need 3 Pallets:
 // 1. System: Which is included with every FRAME runtime.
@@ -62,6 +62,7 @@ impl pallet_balances::Config for TestRuntime {
 // will also need to update this configuration to represent that.
 impl pallet_kitties::Config for TestRuntime {
 	type RuntimeEvent = RuntimeEvent;
+	type NativeBalance = PalletBalances;
 }
 
 // We need to run most of our tests using this function: `new_test_ext().execute_with(|| { ... });`
@@ -306,4 +307,21 @@ fn transfer_logic_works() {
 		let kitty = &Kitties::<TestRuntime>::iter_values().collect::<Vec<_>>()[0];
 		assert_eq!(kitty.owner, BOB);
 	});
+}
+
+#[test]
+fn native_balance_associated_type_works() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(<<TestRuntime as Config>::NativeBalance as Mutate<_>>::mint_into(&ALICE, 1337));
+		assert_eq!(
+			<<TestRuntime as Config>::NativeBalance as Inspect<_>>::total_balance(&ALICE),
+			1337
+		);
+	});
+}
+
+#[test]
+fn balance_of_type_works() {
+	// Inside our tests, the `BalanceOf` type has a concrete type of `u64`.
+	let _example_balance: BalanceOf<TestRuntime> = 1337u64;
 }
