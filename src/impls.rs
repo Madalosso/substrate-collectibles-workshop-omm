@@ -18,6 +18,8 @@ impl<T: Config> Pallet<T> {
 	pub fn do_transfer(from: T::AccountId, to: T::AccountId, dna: [u8; 32]) -> DispatchResult {
 		// Not transferring to self
 		ensure!(!from.eq(&to), Error::<T>::TransferToSelf);
+		// (Workshop implementation)
+		// Could be checked using == sign
 
 		// Kitty exists
 		// ensure!(Kitties::<T>::contains_key(dna), Error::<T>::NoKitty);
@@ -25,21 +27,38 @@ impl<T: Config> Pallet<T> {
 			Some(kitty) => kitty,
 			None => return Err(Error::<T>::NoKitty.into()),
 		};
-		// caller/from owner
+		// (Workshop implementation)
+		// let mut kitty = Kitties::<T>::get(kitty_id).ok_or(Error::<T>::NoKitty)?;
+		// Conclusion: Seems cleaner
+
+		// caller/from is the owner
 		ensure!(kitty.owner.eq(&from), Error::<T>::NotOwner);
+		// (Workshop implementation)
+		// Could be checked using == sign
+
+		// (Workshop implementation)
+		// kitty.owner = to.clone();
+		// Kitty.owner assigned here Doesn't seem like it matters
 
 		// Add kitty to owned map
-		let mut to_owned = KittiesOwned::<T>::get(to.clone());
-		to_owned.try_push(dna).map_err(|_| Error::<T>::TooManyOwned)?;
+		// let mut to_owned = KittiesOwned::<T>::get(to.clone());
+		// (Workshop implementation)
+		let mut to_owned = KittiesOwned::<T>::get(&to);
+		// conclusion can borrow the to instead of cloning it. Better. Adopt.
+		// TODO: Review borrow content
 
-		// Valid alternative? If so, maybe this removes the necessity of
+		to_owned.try_push(dna).map_err(|_| Error::<T>::TooManyOwned)?;
+		// (Workshop implementation) Same
+
+		// Valid alternative?
+		// KittiesOwned::<T>::try_append(&to, dna).map_err(|_| Error::<T>::TooManyOwned)?;
+		// If so, maybe this removes the necessity of
 		// KittiesOwned::<T>::insert(to, to_owned);
 		// later?
-		// KittiesOwned::<T>::try_append(&to, dna).map_err(|_| Error::<T>::TooManyOwned)?;
 
 		// Remove kitty from from_owned map
 		// let mut from_owned = KittiesOwned::<T>::try_get(from)?;
-		let mut from_owned = KittiesOwned::<T>::get(from.clone());
+		let mut from_owned = KittiesOwned::<T>::get(&from);
 
 		let index =
 			from_owned
@@ -52,11 +71,18 @@ impl<T: Config> Pallet<T> {
 			None => return Err(Error::<T>::NotOwner.into()),
 		};
 		from_owned.swap_remove(index);
+		// (Workshop implementation)
+		// if let Some(ind) = from_owned.iter().position(|&id| id == dna) {
+		// 	from_owned.swap_remove(ind);
+		// } else {
+		// 	return Err(Error::<T>::NoKitty.into());
+		// }
+		// Conclusion: Way cleaner. Adopt. Review Iter().position()
 
 		kitty.owner = to.clone();
 		Kitties::<T>::insert(dna, kitty);
-		KittiesOwned::<T>::insert(to.clone(), to_owned);
-		KittiesOwned::<T>::insert(from.clone(), from_owned);
+		KittiesOwned::<T>::insert(&to, to_owned);
+		KittiesOwned::<T>::insert(&from, from_owned);
 
 		Self::deposit_event(Event::<T>::Transferred { from, to, kitty_id: dna });
 		Ok(())
